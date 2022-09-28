@@ -141,6 +141,9 @@ final_dummy_sum=aggregate(.~ id, data = temp_dummy_sum, FUN = sum, na.rm = TRUE)
 temp_dummy_avg=select(data_personas,P6210s1)
 cols <- c("P6210s1")
 
+
+
+
 temp_dummy_avg<-data.frame(lapply(temp_dummy_avg,factor))
 temp_dummy_avg=dummy_cols(temp_dummy_avg[cols], remove_selected_columns=TRUE)
 
@@ -152,10 +155,13 @@ temp_dummy_avg=(cbind(id,temp_dummy_avg,temp_avg))
 
 final_dummy_avg=aggregate(.~ id, data = temp_dummy_avg, FUN = mean, na.rm = TRUE)
 
+names(final_dummy_avg)[names(final_dummy_avg)=="P6800"]="P6800_avg"
+names(final_dummy_avg)[names(final_dummy_avg)=="P7045"]="P7045_avg"
 
 
 df_final<-left_join(df_hogares,final_dummy_sum)
 df_final<-left_join(df_final,final_dummy_avg)
+
 
 
 
@@ -169,26 +175,21 @@ df_test_examen=df_final[df_final$status=="test",]
 #use 70% of dataset as training set and 30% as test set
 sample <- sample.split(temp_df_train$status, SplitRatio =0.9)
 df_train2  <- subset(temp_df_train, sample == TRUE)
-df_Val   <- subset(temp_df_train, sample == FALSE)
+df_val   <- subset(temp_df_train, sample == FALSE)
 
 sample2 <- sample.split(df_train2$status, SplitRatio =0.8)
 
 df_train  <- subset(df_train2, sample2 == TRUE)
 df_test   <- subset(df_train2, sample2 == FALSE)
 
+path <- here()
+setwd(path)
 
 
-
-
-
-## 8. Elastic Net
-
-## 9. Random Forest
-
-## 10. XGBoost
-
-
-##
+write.csv(df_train,"./Data/train.csv", row.names = FALSE)
+write.csv(df_val,"./Data/val.csv", row.names = FALSE)
+write.csv(df_test,"./Data/test.csv", row.names = FALSE)
+write.csv(df_test_examen,"./Data/df_test_examen.csv", row.names = FALSE)
 
 
 
