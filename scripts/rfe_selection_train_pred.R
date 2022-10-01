@@ -268,3 +268,181 @@ rfe_clas <- rfe(x=feature_selection_set_indivhog_clas_2_encoded,
 
 
 
+
+# MODEL TRAINING ----------------------------------------------------------
+
+
+## Regresión ---------------------------------------------------------------
+
+
+#Crear set de validación
+validation_reg <- train_personas_2[train_personas_2$id%in%validation_set_hog$id,]%>% 
+  select(
+    Ingtot,
+    Ingtot,
+    id,
+    P6020,#genero
+    P6040,#años
+    P6210,#nivel educativo
+    P6800,#HORAS DE TRABAJO#200K NAS
+    P7495#recibio pago de arrendamiento o pension,
+  ) %>% 
+  filter(complete.cases(.)) %>% 
+  mutate(age_2=P6040^2,
+         P6210=factor(P6210,levels=levels(train_reg$P6210))) %>% 
+  mutate_at(vars(-contains(c("Ingtot","P6040","P6800","age_2"))),~factor(.,exclude=NA))
+
+#Factor debe tener los mismos niveles al momento de predecir
+levels(validation_reg$P6210) <- levels(train_reg$P6210)
+
+#Set de entrenamiento
+train_reg <- train_personas_2[train_personas_2$id%in%training_set_hog$id,]%>% 
+  select(
+    Ingtot,
+    id,
+    P6020,#genero
+    P6040,#años
+    P6210,#nivel educativo
+    P6800,#HORAS DE TRABAJO#200K NAS
+    P7495#recibio pago de arrendamiento o pension,
+  ) %>% 
+  filter(complete.cases(.)) %>% 
+  mutate(age_2=P6040^2) %>% 
+  mutate_at(vars(-contains(c("Ingtot","P6040","P6800","age_2"))),as.factor)
+
+
+categoricas <- colnames(train_reg)[-which(colnames(train_reg)%in%c("id","Ingtot","P6040","P6800","age_2"))]
+
+
+#No se puede usar model.matrix por el tamaño
+train_reg_encoded<- dummy_cols(train_reg,
+                               select_columns=categoricas,
+                               remove_selected_columns=T) %>% select(-id)
+
+
+
+validation_reg_encoded <- dummy_cols(validation_reg,
+                                     select_columns=categoricas,
+                                     remove_selected_columns=T) %>% select(-id)
+
+
+
+#LINEAR REGRESSION
+
+reg_lr <- lm(Ingtot~., 
+             train_reg[,-2])
+pred_reg_lr <- predict(reg_lr,validation_reg)
+rmse_reg_lr <- postResample(pred = pred_reg_lr, obs = validation_reg$Ingtot)
+rmse_reg_lr[1]
+
+
+
+#XGBOOST
+train_control_reg <- trainControl(method="cv", 
+                                  number=5, 
+                                  allowParallel = T)
+
+#Grilla para hiperparámetros
+grid_xgboost_reg <- expand.grid(nrounds = c(250,500),
+                                max_depth = c(4,6,8),
+                                eta = c(0.01,0.3,0.5),
+                                gamma = c(0),
+                                min_child_weight = c(10,25,50),
+                                colsample_bytree = 1,
+                                subsample = 1)
+#Entrenamiento
+train_control_reg <- trainControl(method="cv", 
+                                  number=5, 
+                                  allowParallel = T)
+
+
+grid_xgboost_reg <- expand.grid(nrounds = c(250,500),
+                                max_depth = c(4,6,8),
+                                eta = c(0.01,0.3,0.5),
+                                gamma = c(0),
+                                min_child_weight = c(10,25,50),
+                                colsample_bytree = 1,
+                                subsample = 1)
+
+xgboost_reg <- train(
+  Ingtot~.,
+  data=train_reg_encoded,
+  method = "xgbTree",
+  trControl = train_control_reg,
+  tuneGrid = grid_xgboost_reg,
+  preProcess = c("center", "scale")
+)
+
+
+pred_reg_xgb <- predict(xgboost_reg,validation_reg_encoded)
+rmse_reg_xgb <- postResample(pred = pred_reg_xgb, obs = validation_reg$Ingtot)
+rmse_reg_xgb[1]
+
+
+
+#Reporte de resultados
+resultados_rmse <- tibble(
+  "Modelo"=c("Regresión Lineal",
+             "XGBoost"),
+  
+  "RMSE"=c(rmse_reg_lr[1],
+           rmse_reg_xgb[1]),
+  
+  "Número de variables"=rep(5,2)
+  
+  
+)
+
+
+
+
+#Predicciones de pobreza
+pobre_reg_lr <- tibble("id"=validation_reg$id,"ingtot_pred"=pred_reg_lr) %>% 
+  group_by(id) %>% 
+  mutate(Ingtotug_pred=sum(ingtot_pred,na.rm=T)) %>% 
+  select(-ingtot_pred) %>% 
+  distinct() %>% 
+  left_join(validation_set_hog[,c("id","Nper","Lp","Pobre")]) %>% 
+  mutate(ingpcug_pred=Ingtotug_pred/Nper,
+         pobre_pred=ifelse(ingpcug_pred<Lp,1,0)
+  )
+
+
+#Evaluar en función personalizada
+reg_lr_weighed_fpr_fnr <- weighed_fpr_fnr(tibble("pred" = pobre_reg_lr$pobre_pred, "obs" = pobre_reg_lr$Pobre))
+
+
+
+#Predicciones de pobreza
+pobre_reg_xgb <- tibble("id"=validation_reg$id,"ingtot_pred"=pred_reg_xgb) %>% 
+  group_by(id) %>% 
+  mutate(Ingtotug_pred=sum(ingtot_pred,na.rm=T)) %>% 
+  select(-ingtot_pred) %>% 
+  distinct() %>% 
+  left_join(validation_set_hog[,c("id","Nper","Lp","Pobre")]) %>% 
+  mutate(ingpcug_pred=Ingtotug_pred/Nper,
+         pobre_pred=ifelse(ingpcug_pred<Lp,1,0)
+  )
+
+
+#Evaluar en función personalizada
+reg_xbg_weighed_fpr_fnr <- weighed_fpr_fnr(tibble("pred" = pobre_reg_xgb$pobre_pred, "obs" = pobre_reg_xgb$Pobre))
+
+#Reporte de resultados de pobreza
+resultados_reg_fpr_fnr <- tibble(
+  "Modelo"=c("Regresión Lineal",
+             "XGBoost"),
+  
+  "(0.75)FNR+(0.25)FPR"=c(reg_lr_weighed_fpr_fnr[1],
+                          reg_xbg_weighed_fpr_fnr[1]),
+  
+  "Número de variables"=rep(5,2)
+  
+  
+)
+
+#Tabla en código latex
+resultados_reg_fpr_fnr%>% 
+  kable(.,escape = F,format="latex", booktabs=T,linesep = "") %>% 
+  kable_styling()
+
