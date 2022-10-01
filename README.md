@@ -62,12 +62,13 @@ La Descripción de las variables se puede encontrar en:  https://www.dane.gov.co
 
 El proyecto cuenta con los siguientes scripts de R:
 
+* [`descriptive_analysis.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/descriptive_analysis.R)
 * [`funcion_descriptivas.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/funcion_descriptivas.R)
-* [`xgb_datapreprocessing.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Data_Preprocessing.R)
-* [`Linear_Regression.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Linear_Regression.R)
-* [`Logit.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Logit.R)
+* [`regular_lasso_ridge.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/regular_lasso_ridge.R)
+* [`regular_regresion.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/regular_regresion.R)
 * [`rfe_selection_train_pred.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/rfe_selection_train_pred.R)
-* [`xgb_cas.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/xgb_cas.R)
+* [`xgb_clas.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/xgb_clas.R)
+* [`xgb_datapreprocessing.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/xgb_datapreprocessing.R)
 * [`xgb_reg.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/xgb_reg.R)
 ### Informe
 
