@@ -10,7 +10,7 @@ El objetivo de este proyecto es predecir si un hogar es pobre utilizando la meno
 El análisis se desarrolla en 5 etapas:
 
 * Limpieza y entendimiento de datos
-* Desarrollo de estrategias de selección de variables: regularización y RFE
+* Desarrollo de estrategias de selección de variables: regularización, ordenamiento de XGBoost y RFE
 * Entrenamiento y selección de modelos
 * Consolidación del mejor modelo de predicción.
 
@@ -51,9 +51,11 @@ install.packages("sandwich")
 
 En la carpeta [`stores`](https://github.com/Daniel1388/Predicting-Poverty/tree/main/stores) se encuentra el set de datos en excel cada uno procesado por los scripts respectivos de los algoritmos como:
 
-* Data_Preprocessing.R
+* xgb_reg.R.R
 
-La Descipción de las variables se puede encontrar en:  https://www.dane.gov.co/index.php/estadisticas-por-tema/mercado-laboral/empleo-y-desempleo/geih-historicos
+Que sirve para ejecurar los scripts: "xgb_clas.R" y "xgb_reg.R.
+
+La Descripción de las variables se puede encontrar en:  https://www.dane.gov.co/index.php/estadisticas-por-tema/mercado-laboral/empleo-y-desempleo/geih-historicos
 
 
 ### Scripts
@@ -61,12 +63,12 @@ La Descipción de las variables se puede encontrar en:  https://www.dane.gov.co/
 El proyecto cuenta con los siguientes scripts de R:
 
 * [`funcion_descriptivas.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/funcion_descriptivas.R)
-* [`Data_Preprocessing.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Data_Preprocessing.R)
+* [`xgb_datapreprocessing.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Data_Preprocessing.R)
 * [`Linear_Regression.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Linear_Regression.R)
 * [`Logit.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Logit.R)
 * [`rfe_selection_train_pred.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/rfe_selection_train_pred.R)
-* [`XGBOOST.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/XGBOOST.R)
-* [`XGBOOST_Regression.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/XGBOOST_Regression.R)
+* [`xgb_cas.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/xgb_cas.R)
+* [`xgb_reg.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/xgb_reg.R)
 ### Informe
 
 El informe se encuentra en la carpeta [`document`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/document/solucion_taller_2.tex) se encuentra en formato .tex y .pdf. En este archivo se resumen los resultados y se explica su interpretación.
