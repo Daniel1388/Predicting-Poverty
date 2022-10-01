@@ -1,7 +1,7 @@
 # Predicting-Poverty
 
 # Problem Set 2: Predicting Poverty
-Desarrollado por Daniel Delgado, José Julian Parra Montoya y Alison Gissell Ruiz Ruiz.
+Desarrollado por John Daniel Delgado Vargas, José Julian Parra Montoya y Alison Gissell Ruiz Ruiz.
 
 ### Introducción
 
@@ -65,7 +65,8 @@ El proyecto cuenta con los siguientes scripts de R:
 * [`Linear_Regression.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Linear_Regression.R)
 * [`Logit.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/Logit.R)
 * [`rfe_selection_train_pred.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/rfe_selection_train_pred.R)
-
+* [XGBOOST.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/XGBOOST.R)
+* [XGBOOST_Regression.R`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/scripts/XGBOOST_Regression.R)
 ### Informe
 
 El informe se encuentra en la carpeta [`document`](https://github.com/Daniel1388/Predicting-Poverty/blob/main/document/solucion_taller_2.tex) se encuentra en formato .tex y .pdf. En este archivo se resumen los resultados y se explica su interpretación.
