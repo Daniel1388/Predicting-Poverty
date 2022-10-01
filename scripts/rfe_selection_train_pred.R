@@ -685,3 +685,24 @@ resultados_clas_fpr_fnr %>%
   kable(.,escape = F,format="latex", booktabs=T,linesep = "") %>% 
   kable_styling()
 
+
+
+tibble(
+  "Modelo"=c("XGBoost (Clasificación)",
+             "XGBoost (Regresión)"
+             
+             
+  ),
+  
+  "(0.75)FNR+(0.25)FPR"=c(
+    0.11,
+    0.31
+    
+  ),
+  
+  "Número de variables"=c(5,4)
+  
+  
+)%>% 
+  kable(.,escape = F,format="latex", booktabs=T,linesep = "") %>% 
+  kable_styling()
