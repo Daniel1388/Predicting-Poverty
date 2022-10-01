@@ -446,3 +446,244 @@ resultados_reg_fpr_fnr%>%
   kable(.,escape = F,format="latex", booktabs=T,linesep = "") %>% 
   kable_styling()
 
+
+
+## Clasificación ----------------------------------------------------------
+
+#Mejores variables avg_ingtot, avg_age, age_head, Nper
+
+#Set de validación
+validation_clas <- train_personas_2[train_personas_2$id%in%validation_set_hog$id,]%>% 
+  select(
+    Ingtot,
+    id,
+    P6040,#años
+    P6050,#parentesco jefe de hogar
+  ) %>% 
+  group_by(id) %>% 
+  
+  mutate(age_head=ifelse(P6050%in%1,P6040,NA)
+         
+  ) %>% 
+  
+  fill(age_head,.direction = 'downup') %>% 
+  
+  mutate(
+    avg_ingtot=mean(Ingtot,na.rm=T),
+    avg_age=mean(P6040,na.rm=T)) %>% 
+  
+  ungroup() %>% 
+  select(-Ingtot,-P6040,-P6050) %>% 
+  distinct() %>% 
+  left_join(train_hogares_2[,c("id","Pobre","Nper")]) %>% 
+  filter(complete.cases(.)) %>% 
+  mutate(Pobre=as.factor(Pobre)) 
+
+
+
+#Set de entrenamiento
+train_clas <- train_personas_2[train_personas_2$id%in%training_set_hog$id,]%>% 
+  select(
+    Ingtot,
+    id,
+    P6040,#años
+    P6050,#parentesco jefe de hogar
+  ) %>% 
+  group_by(id) %>% 
+  
+  mutate(age_head=ifelse(P6050%in%1,P6040,NA)
+         
+  ) %>% 
+  
+  fill(age_head,.direction = 'downup') %>% 
+  
+  mutate(
+    avg_ingtot=mean(Ingtot,na.rm=T),
+    avg_age=mean(P6040,na.rm=T)) %>% 
+  
+  ungroup() %>%
+  select(-Ingtot,-P6040,-P6050) %>% 
+  distinct() %>% 
+  left_join(train_hogares_2[,c("id","Pobre","Nper")]) %>% 
+  filter(complete.cases(.)) %>% 
+  mutate(Pobre=as.factor(Pobre)) 
+
+
+#Remuestreo
+train_clas_smote <- recipe(Pobre~avg_ingtot+avg_age+age_head+Nper,
+                           data=train_clas) %>% 
+  themis::step_smote(Pobre,over_ratio=1) %>% 
+  prep() %>% 
+  bake(new_data=NULL)
+
+
+train_clas_undersamp <- recipe(Pobre~avg_ingtot+avg_age+age_head+Nper,
+                               data=train_clas) %>% 
+  themis::step_downsample(Pobre) %>% 
+  prep() %>% 
+  bake(new_data=NULL)
+
+
+#Verificación
+prop.table(table(train_clas$Pobre))
+prop.table(table(train_clas_smote$Pobre))
+prop.table(table(train_clas_undersamp$Pobre))
+
+
+
+### Sin resampleo
+
+train_control_clas <- trainControl(method="cv", 
+                                   number=5, 
+                                   summaryFunction = weighed_fpr_fnr,
+                                   allowParallel = T)
+#Entrenar probit
+clas_probit_noresamp <- train(Pobre~avg_ingtot+avg_age+age_head+Nper, 
+                              data = train_clas, 
+                              method = "glm", 
+                              metric="weighted_fnr_fpr",
+                              family = binomial(link="probit"),
+                              trControl =train_control_clas)
+#Entrenar logit
+clas_logit_noresamp <- train(Pobre~avg_ingtot+avg_age+age_head+Nper, 
+                             data = train_clas, 
+                             method = "glm", 
+                             metric="weighted_fnr_fpr",
+                             family = binomial(link="logit"),
+                             trControl =train_control_clas)
+
+
+
+#Control de xgboost
+train_control_clas <- trainControl(method="cv", 
+                                   number=5, 
+                                   summaryFunction = weighed_fpr_fnr,
+                                   allowParallel = T)
+#Grilla de hiperparametros de xgboost
+
+grid_xgboost_clas <- expand.grid(nrounds = c(250,500),
+                                 max_depth = c(4,6,8),
+                                 eta = c(0.01,0.3,0.5),
+                                 gamma = c(0),
+                                 min_child_weight = c(10,25,50),
+                                 colsample_bytree = 1,
+                                 subsample = 1)
+
+
+#Entrenar xgboost
+xgboost_clas <- train(
+  Pobre~avg_ingtot+avg_age+age_head+Nper,
+  data=train_clas,
+  method = "xgbTree",
+  trControl = train_control_clas,
+  metric = "weighted_fnr_fpr",
+  tuneGrid = grid_xgboost_clas,
+  preProcess = c("center", "scale"))
+
+
+
+### SMOTE
+
+#Entrenar probit
+clas_probit_smote <- train(Pobre~avg_ingtot+avg_age+age_head+Nper, 
+                           data = train_clas_smote, 
+                           method = "glm", 
+                           metric="weighted_fnr_fpr",
+                           family = binomial(link="probit"),
+                           trControl =train_control_clas)
+#Entrenar logit
+clas_logit_smote <- train(Pobre~avg_ingtot+avg_age+age_head+Nper, 
+                          data = train_clas_smote, 
+                          method = "glm", 
+                          metric="weighted_fnr_fpr",
+                          family = binomial(link="logit"),
+                          trControl =train_control_clas)
+
+
+### Undersampling 
+
+#Entrenar probit
+clas_probit_undersamp <- train(Pobre~avg_ingtot+avg_age+age_head+Nper, 
+                               data = train_clas_undersamp, 
+                               method = "glm", 
+                               metric="weighted_fnr_fpr",
+                               family = binomial(link="probit"),
+                               trControl =train_control_clas)
+#Entrenar logit
+clas_logit_undersamp <- train(Pobre~avg_ingtot+avg_age+age_head+Nper, 
+                              data = train_clas_undersamp, 
+                              method = "glm", 
+                              metric="weighted_fnr_fpr",
+                              family = binomial(link="logit"),
+                              trControl =train_control_clas)
+
+
+
+
+# Predicción
+
+pred_clas_probit_noresamp <- predict(clas_probit_noresamp,newdata=validation_clas)
+eval_pred_clas_probit_noresamp <- weighed_fpr_fnr(tibble("pred"=pred_clas_probit_noresamp,"obs"=validation_clas$Pobre))
+
+pred_clas_logit_noresamp <- predict(clas_logit_noresamp,newdata=validation_clas)
+eval_pred_clas_logit_noresamp <- weighed_fpr_fnr(tibble("pred"=pred_clas_logit_noresamp,"obs"=validation_clas$Pobre))
+
+
+
+#smote
+pred_clas_probit_smote <- predict(clas_probit_smote,newdata=validation_clas)
+eval_pred_clas_probit_smote <- weighed_fpr_fnr(tibble("pred"=pred_clas_probit_smote,"obs"=validation_clas$Pobre))
+
+pred_clas_logit_smote <- predict(clas_logit_smote,newdata=validation_clas)
+eval_pred_clas_logit_smote <- weighed_fpr_fnr(tibble("pred"=pred_clas_logit_smote,"obs"=validation_clas$Pobre))
+
+
+#undersampling
+pred_clas_probit_undersamp <- predict(clas_probit_undersamp,newdata=validation_clas)
+eval_pred_clas_probit_undersamp <- weighed_fpr_fnr(tibble("pred"=pred_clas_probit_undersamp,"obs"=validation_clas$Pobre))
+
+pred_clas_logit_undersamp <- predict(clas_logit_undersamp,newdata=validation_clas)
+eval_pred_clas_logit_undersamp <- weighed_fpr_fnr(tibble("pred"=pred_clas_logit_undersamp,"obs"=validation_clas$Pobre))
+
+
+#XGboost
+
+pred_clas_xgboost <- predict(xgboost_clas,newdata=validation_clas)
+eval_pred_clas_xgboost <- weighed_fpr_fnr(tibble("pred"=pred_clas_xgboost,"obs"=validation_clas$Pobre))
+
+
+
+#Reporte de resultados
+
+resultados_clas_fpr_fnr <- tibble(
+  "Modelo"=c("Probit",
+             "Logit",
+             "Probit (SMOTE)",
+             "Logit (SMOTE)",
+             "Probit (Undersampling)",
+             "Logit (Undersampling)",
+             "XGBoost"
+             
+             
+  ),
+  
+  "(0.75)FNR+(0.25)FPR"=c(eval_pred_clas_probit_noresamp[1],
+                          eval_pred_clas_logit_noresamp[1],
+                          
+                          eval_pred_clas_probit_smote,
+                          eval_pred_clas_logit_smote,
+                          eval_pred_clas_probit_undersamp,
+                          eval_pred_clas_logit_undersamp,
+                          eval_pred_clas_xgboost
+  ),
+  
+  "Número de variables"=rep(4,7)
+  
+  
+)
+
+#Código latex tabla
+
+resultados_clas_fpr_fnr %>% 
+  kable(.,escape = F,format="latex", booktabs=T,linesep = "") %>% 
+  kable_styling()
