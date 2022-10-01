@@ -115,3 +115,156 @@ rfe_reg <- rfe(x=feature_selection_set_encoded[,-1],
                rfeControl = feature_selection_ctrl,
                na.action=na.omit)
 
+
+
+# Clasificación -----------------------------------------------------------
+
+set.seed(1)
+feature_selection_sample_hog <- sample(1:nrow(training_set_hog),
+                                       round(nrow(training_set_hog)*0.3),0)
+
+#Muestreo debe ser a nivel de hogar para agregar los ingresos.
+id_feature_selection_sample_hog <- training_set_hog[feature_selection_sample_hog,"id"]
+
+#Selección de variables individuales de acuerdo a partición de hogares
+feature_selection_set_indiv_clas <- train_personas_2[train_personas_2$id%in%id_feature_selection_sample_hog$id,] %>% 
+  select(
+    Ingtot,
+    id,
+    Clase,
+    P6020,#genero
+    P6040,#años
+    P6050,#parentesco jefe de hogar
+    P6090,#cotizante#no tiene variación
+    P6210,#nivel educativo
+    P6240,#grado
+    P6800,#HORAS DE TRABAJO#200K NAS
+    P6870,#PERSOANS EN LA EMPRESA#200K NAS
+    P6920,#COTIZACION PENSIONES, 200K NAS
+    P7040,#OTRO NEGOCIO, 
+    P7090,#quiere trabajar mas horas
+    P7505,#subsidios
+    P7495#recibio pago de arrendamiento o pension
+  ) %>% 
+  mutate(age_2=P6040^2)
+
+
+#Seleccionar y convetri en factores
+feature_selection_set_indiv_clas_2 <- feature_selection_set_indiv_clas %>% 
+  mutate_at(vars(-contains(c("Ingtot","P6040","P6800","age_2"))),as.factor)
+
+#Función que crea la moda
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+#Seleccionar variables y crear nuevas variables
+feature_selection_set_indivhog_clas <- feature_selection_set_indiv_clas_2 %>% 
+  mutate(
+    jefe_hogar_mujer=ifelse(P6050%in%1&P6020%in%2,1,0)) %>% 
+  
+  group_by(id) %>% 
+  
+  mutate(dependency_ratio=sum(P6040>=65,na.rm=T)/n(),
+         old_radio=sum(P6040>=60,na.rm=T)/n(),
+         age_head=ifelse(P6050%in%1,P6040,NA)
+         
+  ) %>% 
+  
+  fill(age_head,.direction = 'downup') %>% 
+  
+  mutate(
+    clase_mode=getmode(Clase),
+    P6020_mode=getmode(P6020),
+    P6050_mode=getmode(P6050),
+    P6090_mode=getmode(P6090),
+    P6210_mode=getmode(P6210),
+    P6240_mode=getmode(P6240),
+    P6870_mode=getmode(P6870),
+    P6920_mode=getmode(P6920),
+    P7040_mode=getmode(P7040),
+    P7090_mode=getmode(P7090),
+    P7505_mode=getmode(P7505),
+    P7495_mode=getmode(P7495),
+    avg_ingtot=mean(Ingtot,na.rm=T),
+    median_ingtot=median(Ingtot,na.rm=T),
+    avg_age=mean(P6040,na.rm=T),
+    median_age=median(Ingtot,na.rm=T),
+    avg_horas=mean(P6800,na.rm=T),
+    median_horas=median(P6800,na.rm=T)
+  ) %>% 
+  
+  ungroup() %>% 
+  select(id,jefe_hogar_mujer,dependency_ratio,old_radio,age_head,contains(c("mode","avg","median"))) %>% 
+  distinct
+
+
+feature_selection_set_indivhog_clas_2 <- feature_selection_set_indivhog_clas %>% 
+  left_join(train_hogares_2[,c("id","Pobre","Nper")]) %>% 
+  filter(complete.cases(.)) %>% 
+  mutate(Pobre=as.factor(Pobre)) 
+
+feature_selection_set_indivhog_clas_2_encoded<- model.matrix(Pobre~.-1,feature_selection_set_indivhog_clas_2[,-1])
+
+
+#Función personalizada
+weighed_fpr_fnr <- function (data, lev = NULL, model = NULL) {
+  #1's are true positives and 0's are false positives
+  tp <- sum(as.numeric(data$pred[data$obs%in%1]))
+  fp <- length(data$pred[data$obs==1])-sum(as.numeric(data$pred[data$obs==1]))
+  
+  #1's are false negatives and 0's are true negatives
+  fn <- sum(as.numeric(data$pred[data$obs==0]))
+  tn <- length(data$pred[data$obs==0])-sum(as.numeric(data$pred[data$obs==0]))
+  
+  #tpr
+  
+  if((fp+tn)!=0){
+    fpr <- fp/(fp+tn)
+  }else{
+    fpr <- 0
+    
+  }
+  
+  if((fn+tp)!=0){
+    fnr <- fn/(fn+tp)
+    
+  }else{
+    fnr <- 0
+  }
+  
+  weighted_fnr_fpr=0.75*fnr+0.25*fpr
+  names(weighted_fnr_fpr) <- c("weighted_fnr_fpr")
+  
+  return(weighted_fnr_fpr)
+  
+  
+  
+  
+  
+} 
+
+#Emplear la función en el summary
+rfFuncs$summary <- weighed_fpr_fnr
+
+#Pasar función para generar la metrica especial
+feature_selection_ctrl <- rfeControl(functions = rfFuncs,
+                                     method = "repeatedcv",
+                                     repeats = 5,
+                                     verbose = T,
+                                     allowParallel = T)
+#Subconjuntos de variables
+subsets <- c(4,6,8)
+
+#Evaluar en la función especial
+rfe_clas <- rfe(x=feature_selection_set_indivhog_clas_2_encoded, 
+                y=feature_selection_set_indivhog_clas_2[["Pobre"]],
+                maximize = F,
+                sizes = subsets,
+                metric="weighted_fnr_fpr",
+                rfeControl = feature_selection_ctrl,
+                na.action=na.omit)
+
+
+
