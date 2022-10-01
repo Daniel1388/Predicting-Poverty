@@ -277,7 +277,6 @@ rfe_clas <- rfe(x=feature_selection_set_indivhog_clas_2_encoded,
 validation_reg <- train_personas_2[train_personas_2$id%in%validation_set_hog$id,]%>% 
   select(
     Ingtot,
-    Ingtot,
     id,
     P6020,#genero
     P6040,#años
