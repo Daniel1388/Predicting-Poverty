@@ -116,7 +116,6 @@ rfe_reg <- rfe(x=feature_selection_set_encoded[,-1],
                na.action=na.omit)
 
 
-
 # Clasificación -----------------------------------------------------------
 
 set.seed(1)
@@ -265,7 +264,6 @@ rfe_clas <- rfe(x=feature_selection_set_indivhog_clas_2_encoded,
                 metric="weighted_fnr_fpr",
                 rfeControl = feature_selection_ctrl,
                 na.action=na.omit)
-
 
 
 
@@ -687,3 +685,4 @@ resultados_clas_fpr_fnr <- tibble(
 resultados_clas_fpr_fnr %>% 
   kable(.,escape = F,format="latex", booktabs=T,linesep = "") %>% 
   kable_styling()
+
