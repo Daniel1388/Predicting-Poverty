@@ -6,10 +6,9 @@ p_load(tidyverse,knitr,kableExtra,here,jtools,ggstance,broom,broom.mixed,skimr,r
 set.seed(10101)
 
 # Carga de información
-here("data","train.csv")
-trainin <- import(here("data","train.csv"))
-test <- import(here("data","test.csv"))
-validation <- import(here("data","test_personas.RDS"))
+trainin <- import(here("stores","train.csv"))
+test <- import(here("stores","test.csv"))
+validation <- import(here("stores","test_personas.RDS"))
 
 #Seleccionando variable Y 
 Pobre <- trainin[,13]

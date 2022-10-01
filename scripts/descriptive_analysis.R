@@ -12,11 +12,11 @@ source("funcion_descriptivas.R")
 
 # LECTURA DE DATOS --------------------------------------------------------
 
-train_hogares<-readRDS(here("data","train_hogares.Rds"))
-train_personas<-readRDS(here("data","train_personas.Rds"))
+train_hogares<-readRDS(here("stores","train_hogares.Rds"))
+train_personas<-readRDS(here("stores","train_personas.Rds"))
 
-test_hogares<-readRDS(here("data","test_hogares.Rds"))
-test_personas<-readRDS(here("data","test_personas.Rds"))
+test_hogares<-readRDS(here("stores","test_hogares.Rds"))
+test_personas<-readRDS(here("stores","test_personas.Rds"))
 
 
 #Seleccionar variables que están en test.

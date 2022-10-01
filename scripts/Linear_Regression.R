@@ -4,10 +4,10 @@ p_load(InformationValue,ISLR,tidyverse,knitr,kableExtra,here,jtools,ggstance,bro
 set.seed(10101)
 
 # Carga de información
-train <- import(here("data","train.csv"))
-test <- import(here("data","test.csv"))
-validation <- import(here("data","df_test_examen.csv"))
-val <- import(here("data","validation_set_id.csv"))
+train <- import(here("stores","train.csv"))
+test <- import(here("stores","test.csv"))
+validation <- import(here("stores","df_test_examen.csv"))
+val <- import(here("stores","validation_set_id.csv"))
 
 #Seleccionando variable Y 
 Ingpcug <- train[,14]
