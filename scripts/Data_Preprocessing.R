@@ -10,11 +10,11 @@ set.seed(6347)
 
 path <- here()
 setwd(path)
-train_hogares <- readRDS(here("./Data/train_hogares.Rds"))
-test_hogares <- readRDS(here("./Data/test_hogares.Rds"))
-train_personas<-readRDS(here("./Data/train_personas.Rds"))
-test_personas<-readRDS(here("./Data/test_personas.Rds"))
-Val_team<-read.csv(here("./Data/validation_set_id.csv"))
+train_hogares <- readRDS(here("./stores/train_hogares.Rds"))
+test_hogares <- readRDS(here("./stores/test_hogares.Rds"))
+train_personas<-readRDS(here("./stores/train_personas.Rds"))
+test_personas<-readRDS(here("./stores/test_personas.Rds"))
+Val_team<-read.csv(here("./stores/validation_set_id.csv"))
 
 #data.frame(colnames(train_hogares))
 
@@ -189,10 +189,10 @@ df_test   <- subset(temp_df_train2, sample == FALSE)
 path <- here()
 setwd(path)
 
-write.csv(df_train,"./Data/train.csv", row.names = FALSE)
-write.csv(df_val,"./Data/val.csv", row.names = FALSE)
-write.csv(df_test,"./Data/test.csv", row.names = FALSE)
-write.csv(df_test_examen,"./Data/df_test_examen.csv", row.names = FALSE)
+write.csv(df_train,"./stores/train.csv", row.names = FALSE)
+write.csv(df_val,"./stores/val.csv", row.names = FALSE)
+write.csv(df_test,"./stores/test.csv", row.names = FALSE)
+write.csv(df_test_examen,"./stores/df_test_examen.csv", row.names = FALSE)
 
 
 
