@@ -10,13 +10,13 @@ set.seed(6347)
 
 path <- here()
 setwd(path)
-train_hogares <- readRDS(here("./stores/train_hogares.Rds"))
-test_hogares <- readRDS(here("./stores/test_hogares.Rds"))
-train_personas<-readRDS(here("./stores/train_personas.Rds"))
-test_personas<-readRDS(here("./stores/test_personas.Rds"))
+train_hogares <- readRDS(here("./Data/train_hogares.Rds"))
+test_hogares <- readRDS(here("./Data/test_hogares.Rds"))
+train_personas<-readRDS(here("./Data/train_personas.Rds"))
+test_personas<-readRDS(here("./Data/test_personas.Rds"))
+Val_team<-read.csv(here("./Data/validation_set_id.csv"))
 
-
-#data.frame(colnames(test_hogares))
+#data.frame(colnames(train_hogares))
 
 
 sapply(test_personas, function(x) sum(is.na(x))) ## Nulos
@@ -50,7 +50,7 @@ table(train_hogares$Pobre,train_hogares$Pobre_hand_2)
 train_hogares$status<- "train"
 test_hogares$status<- "test"
 test_hogares$Pobre<- 0
-test_hogares$Ingtotug<- 0
+test_hogares$Ingpcug<- 0
 
 #View(data_hogares)
 
@@ -79,12 +79,16 @@ df_hogares=select(
           Npersug,
           Li,
           Lp,
-          status
+          status,
+          Pobre,
+          Ingpcug
         )
+
+
 
 cols <- c("Dominio", "P5090","Depto")
 dummy_hogares=dummy_cols(data_hogares[cols], remove_selected_columns=TRUE)
-#View(dummy_hogares)
+#View(df_hogares)
 
 df_hogares=(cbind(df_hogares,dummy_hogares))
 
@@ -163,34 +167,32 @@ df_final<-left_join(df_hogares,final_dummy_sum)
 df_final<-left_join(df_final,final_dummy_avg)
 
 
-
-
 ## 7. selección de grupo test y validacion
 
 
 temp_df_train=df_final[df_final$status=="train",]
-
 df_test_examen=df_final[df_final$status=="test",]
 
+temp_df_train2=temp_df_train %>%filter(!id %in% Val_team$id)
+df_val=filter(temp_df_train, id %in% Val_team$id)
+
 #use 70% of dataset as training set and 30% as test set
-sample <- sample.split(temp_df_train$status, SplitRatio =0.9)
-df_train2  <- subset(temp_df_train, sample == TRUE)
-df_val   <- subset(temp_df_train, sample == FALSE)
+sample <- sample.split(temp_df_train2$status, SplitRatio =0.8)
+df_train  <- subset(temp_df_train2, sample == TRUE)
+df_test   <- subset(temp_df_train2, sample == FALSE)
 
-sample2 <- sample.split(df_train2$status, SplitRatio =0.8)
+#sample2 <- sample.split(df_train2$status, SplitRatio =0.8)
 
-df_train  <- subset(df_train2, sample2 == TRUE)
-df_test   <- subset(df_train2, sample2 == FALSE)
+#df_train  <- subset(df_train2, sample2 == TRUE)
+#df_test   <- subset(df_train2, sample2 == FALSE)
 
 path <- here()
 setwd(path)
 
-
-write.csv(df_train,"./stores/train.csv", row.names = FALSE)
-write.csv(df_val,"./stores/val.csv", row.names = FALSE)
-write.csv(df_test,"./stores/test.csv", row.names = FALSE)
-write.csv(df_test_examen,"./stores/df_test_examen.csv", row.names = FALSE)
-
+write.csv(df_train,"./Data/train.csv", row.names = FALSE)
+write.csv(df_val,"./Data/val.csv", row.names = FALSE)
+write.csv(df_test,"./Data/test.csv", row.names = FALSE)
+write.csv(df_test_examen,"./Data/df_test_examen.csv", row.names = FALSE)
 
 
 
