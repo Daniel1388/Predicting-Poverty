@@ -16,10 +16,10 @@ set.seed(6347)
 
 path <- here()
 setwd(path)
-train <- read.csv(here("./Data/train.csv"))
-test <- read.csv(here("./Data/test.csv"))
-val<-read.csv(here("./Data/val.csv"))
-test_examen<-read.csv(here("./Data/df_test_examen.csv"))
+train <- read.csv(here("./stores/train.csv"))
+test <- read.csv(here("./stores/test.csv"))
+val<-read.csv(here("./stores/val.csv"))
+test_examen<-read.csv(here("./stores/df_test_examen.csv"))
 
 train=select(train,-Ingpcug)
 test=select(test,-Ingpcug)
@@ -248,7 +248,7 @@ TE=cbind(test_examen_id , F_obj_exm$V1)%>% data.frame()
 colnames(TE) <- c('id','classification_model')
 
 TE$classification_model=as.numeric(TE$classification_model)
-write.csv(TE,"./Data/output_exam.csv", row.names = FALSE)
+write.csv(TE,"./stores/output_exam.csv", row.names = FALSE)
 
 
 
