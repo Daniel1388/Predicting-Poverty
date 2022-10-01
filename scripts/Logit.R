@@ -47,11 +47,11 @@ summary(lassofit)
 plot(ridgefit, xvar= 'lambda', label=T)
 
 #Entrenamiento de Logit
-logit <- glm(ytrain~P6100_3 +P6100_0+ P6430_8+ P7110_2 + P6210s1_14 + P6630s6_2+P5000,
+logit <- glm(ytrain~P6100_3 +P6100_0+ P6430_8+ P7110_2,
                data = dftrain, family = "binomial")
 summary(logit,type="text")
 
 #Predecir con modelo
-selected_variables <- c("P6100_3","P6100_0","P6430_8", "P7110_2", "P6210s1_14", "P6630s6_2", "P5000")
+selected_variables <- c("P6100_3","P6100_0","P6430_8", "P7110_2")
 pred_mod_log = predict(logit,newdata =subset(dftest,select = selected_variables),type="response")
 head(pred_mod_log)
