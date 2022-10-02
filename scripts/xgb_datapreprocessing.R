@@ -189,12 +189,15 @@ df_test   <- subset(temp_df_train2, sample == FALSE)
 path <- here()
 setwd(path)
 
-write.csv(df_train,"./stores/train.csv", row.names = FALSE)
-write.csv(df_val,"./stores/val.csv", row.names = FALSE)
-write.csv(df_test,"./stores/test.csv", row.names = FALSE)
-write.csv(df_test_examen,"./stores/df_test_examen.csv", row.names = FALSE)
+#write.csv(df_train,"./stores/train.csv", row.names = FALSE)
+#write.csv(df_val,"./stores/val.csv", row.names = FALSE)
+#write.csv(df_test,"./stores/test.csv", row.names = FALSE)
+#write.csv(df_test_examen,"./stores/df_test_examen.csv", row.names = FALSE)
 
-
+saveRDS(df_train, file = "./stores/train.rds")
+saveRDS(df_val, file = "./stores/val.rds")
+saveRDS(df_test, file = "./stores/test.rds")
+saveRDS(df_test_examen, file = "./stores/df_test_examen.rds")
 
 
 
